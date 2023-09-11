@@ -12,7 +12,7 @@ semantic_models:
       - name: order_item
         type: primary
         expr: order_item_id
-      - name: order_id
+      - name: order
         type: foreign
         expr: order_id
       - name: product
@@ -73,7 +73,7 @@ metrics:
     type_params:
       measure: order_count
     filter: |
-      {{ Dimension('order_id__order_total_dim') }} >= 20
+      {{ Dimension('order__order_total_dim') }} >= 20
   - name: orders
     description: Count of orders.
     label: Orders
@@ -93,7 +93,7 @@ metrics:
     type_params:
       measure: order_count
     filter: |
-        {{Dimension('order_id__is_food_order')}} = true
+        {{Dimension('order__is_food_order')}} = true
 
 
 #Ratio Metrics
