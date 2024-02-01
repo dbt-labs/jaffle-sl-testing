@@ -13,7 +13,6 @@ saved_queries:
       - name: high_value_customers_table
         config:
           export_as: table
-          schema: high_value_customers
       - name: high_value_customers
         config:
           export_as: view
