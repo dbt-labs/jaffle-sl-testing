@@ -18,9 +18,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Seed files don't work as expected with Databricks, so there are none on this branch. Instead, ensure that you upload [these](https://github.com/dbt-labs/jaffle-sl-testing/tree/main/jaffle-data) files individually by following [these](https://docs.databricks.com/en/ingestion/add-data/upload-data.html) instructions.
+2. Add a `profiles.yml` file to the root of this repo by following [these](https://docs.getdbt.com/docs/core/connect-data-platform/databricks-setup) instructions.
 
-3. Install dbt dependencies and build the dbt project.
+3. Seed files don't work as expected with Databricks, so there are none on this branch. Instead, ensure that you upload [these](https://github.com/dbt-labs/jaffle-sl-testing/tree/main/jaffle-data) files individually by following [these](https://docs.databricks.com/en/ingestion/add-data/upload-data.html) instructions.
+
+4. Install dbt dependencies and build the dbt project.
 
 ```console
 dbt deps
