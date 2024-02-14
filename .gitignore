@@ -13,3 +13,4 @@ models/metrics/semantic_manifest.json
 semantic_manifest
 dbt-core/
 .user.yml
+profiles.yml

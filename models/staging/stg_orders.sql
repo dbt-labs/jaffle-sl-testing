@@ -9,7 +9,7 @@ with
 
 source as (
 
-    select * from {{ ref('raw_orders') }}
+    select * from {{ source('raw_data', 'raw_orders') }}
 
     -- data runs to 2026, truncate timespan to desired range,
     -- current time as default

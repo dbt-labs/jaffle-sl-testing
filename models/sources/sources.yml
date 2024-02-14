@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw_data
+    schema: dbt_dfulcher
+    tables:
+      - name: raw_customers
+      - name: raw_items
+      - name: raw_orders
+      - name: raw_products
+      - name: raw_stores
+      - name: raw_supplies

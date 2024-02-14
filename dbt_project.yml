@@ -2,11 +2,10 @@ name: "jaffle_semantic_layer_testing"
 version: "1.0.0"
 config-version: 2
 
-profile: duckdb
+profile: databricks
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
-seed-paths: ["jaffle-data"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 

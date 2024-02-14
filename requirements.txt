@@ -1,6 +1,5 @@
-dbt-duckdb~=1.7.0
+dbt-databricks~=1.7.0
 dbt-core~=1.7.0
-duckcli~=0.2.1
 pre-commit~=3.0.4
 sqlfluff-templater-dbt~=2.0.0a5
 sqlfluff~=2.0.0a5
