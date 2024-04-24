@@ -16,6 +16,7 @@ This project is optimized for running in a container. If you'd like to use it lo
 ```console
 python3 -m poetry install --with=dev
 poetry run dbt deps
+poetry run pre-commit install
 ```
 
 3. Build the dbt project by running:
