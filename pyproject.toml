@@ -17,6 +17,10 @@ sqlfluff = "^3.0.5"
 sqlfluff-templater-dbt = "^3.0.5"
 pre-commit = "^3.7.0"
 
+
+[tool.poetry.group.seed.dependencies]
+faker = "^24.11.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

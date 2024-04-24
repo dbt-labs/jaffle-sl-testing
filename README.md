@@ -13,6 +13,9 @@ This project is optimized for running in a container. If you'd like to use it lo
 python3 -m poetry install --with=dev
 poetry run dbt deps
 poetry run pre-commit install
+
+# If you're running the seeding scripts in `seed/`, run
+poetry install --with=seed
 ```
 
 3. Build the dbt project by running:

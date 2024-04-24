@@ -14,3 +14,4 @@ semantic_manifest
 dbt-core/
 .user.yml
 .python-version
+__pycache__/
