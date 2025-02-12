@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "jaffle-sl-testing"
+version = "0.1.0"
+description = "Testing dbt project for the Semantic Layer"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+dbt-core = ">=1.7.0,<1.8.0"
+
+[tool.poetry.group.dev.dependencies]
+dbt-duckdb = "^1.7.4"
+duckcli = "^0.2.1"
+sqlfluff = "^3.0.5"
+sqlfluff-templater-dbt = "^3.0.5"
+pre-commit = "^3.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
