@@ -3,5 +3,5 @@ version: "3"
 tasks:
   deps:
     cmds:
-      - python -m pip install --progress-bar off -r requirements.txt
-      - dbt deps
+      - python -m poetry install --with=dev
+      - python -m poetry run dbt deps
