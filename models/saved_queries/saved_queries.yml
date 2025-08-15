@@ -15,7 +15,7 @@ saved_queries:
     exports:
       - name: high_value_customers_table
         config:
-          schema: "{{ env_var('DBT_ENV_REPORTING') }}"
+          schema: "{{ env_var('DBT_ENV_REPORTING', 'unkno') }}"
           export_as: table
       - name: high_value_customers
         config:
