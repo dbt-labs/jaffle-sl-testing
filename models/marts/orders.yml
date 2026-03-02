@@ -87,7 +87,12 @@ semantic_models:
       - name: ordered_at
         type: time
         type_params:
-          time_granularity: day 
+          time_granularity: day
+      - name: ordered_at_date
+        type: time
+        expr: date_trunc('day', ordered_at)::DATE
+        type_params:
+          time_granularity: day
       - name: order_total_dim
         type: categorical
         expr: order_total
