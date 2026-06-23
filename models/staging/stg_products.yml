@@ -1,6 +1,8 @@
 semantic_models:
   #The name of the semantic model.
   - name: stg_products
+    config:
+      group: finance
     description: |
       Product dimension table. The grain of the table is one row per product. 
     #The name of the dbt model and schema
