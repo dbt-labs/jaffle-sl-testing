@@ -1,3 +1,4 @@
+{{ config(static_analysis='strict') }}
 with
 
 source as (

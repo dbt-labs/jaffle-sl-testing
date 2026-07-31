@@ -23,7 +23,8 @@ models:
         description: Options are 'new' or 'returning', indicating if a customer has ordered more than once or has only placed their first order to date.
         tests:
           - accepted_values:
-              values: ["new", "returning"]
+              arguments:
+                values: ["new", "returning"]
 metrics:
 # Simple metrics
   - name: customers_with_orders
@@ -39,5 +40,4 @@ metrics:
     type_params:
       measure: customers_with_orders
     filter: |
-        {{ Dimension('customer__customer_type') }}  = 'new'
-
+      {{ Dimension('customer__customer_type') }}  = 'new'
