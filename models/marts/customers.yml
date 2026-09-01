@@ -2,45 +2,49 @@ models:
   - name: customers
     config:
       static_analysis: strict
-    description: Customer overview data mart, offering key details for each unique customer. One row per customer.
+    description: "Customer overview data mart, offering key details for each unique customer. One row per customer. Customer dimension table. The grain of the table is one row per customer.\n"
     columns:
       - name: customer_id
         description: The unique key of the orders mart.
         tests:
           - not_null
           - unique
+        entity:
+          type: primary
+          name: customer
       - name: customer_name
         description: Customers' full name.
+        dimension:
+          type: categorical
       - name: count_lifetime_orders
         description: Total number of orders a customer has ever placed.
+        dimension:
+          type: categorical
       - name: first_ordered_at
         description: The timestamp when a customer placed their first order.
+        dimension:
+          type: time
+        granularity: day
       - name: last_ordered_at
         description: The timestamp of a customer's most recent order.
+        dimension:
+          type: time
+        granularity: day
       - name: lifetime_spend_pretax
         description: The sum of all the pre-tax subtotals of every order a customer has placed.
       - name: lifetime_spend
         description: The sum of all the order totals (including tax) that a customer has ever placed.
+        dimension:
+          type: categorical
       - name: customer_type
         description: Options are 'new' or 'returning', indicating if a customer has ordered more than once or has only placed their first order to date.
         tests:
           - accepted_values:
               arguments:
                 values: ["new", "returning"]
-metrics:
-# Simple metrics
-  - name: customers_with_orders
-    description: "Distict count of customers placing orders"
-    type: simple
-    label: Customers w/ Orders
-    type_params:
-      measure: customers_with_orders
-  - name: new_customer
-    description: Unique count of new customers.
-    label: New Customers
-    type: simple
-    type_params:
-      measure: customers_with_orders
-    filter: |
-        {{ Dimension('customer__customer_type') }}  = 'new'
-
+        dimension:
+          type: categorical
+    semantic_model:
+      enabled: true
+      name: customers
+    agg_time_dimension: first_ordered_at

@@ -14,3 +14,4 @@ semantic_manifest
 dbt-core/
 .user.yml
 dbt_internal_packages/
+package-lock.yml

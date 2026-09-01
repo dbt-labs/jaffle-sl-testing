@@ -11,7 +11,7 @@ models:
           - unique
 
   - name: stg_locations
-    description: List of open locations with basic cleaning and transformation applied, one row per location.
+    description: "List of open locations with basic cleaning and transformation applied, one row per location. Location dimension table. The grain of the table is one row per location. \n"
     columns:
       - name: location_id
         description: The unique key for each location.
@@ -19,6 +19,20 @@ models:
           - not_null
           - unique
 
+        entity:
+          type: primary
+          name: location
+      - name: location_name
+        dimension:
+          type: categorical
+      - name: tax_rate
+        dimension:
+          type: categorical
+      - name: opened_at
+        dimension:
+          type: categorical
+    semantic_model:
+      enabled: true
   - name: stg_order_items
     description: Individual food and drink items that make up our orders, one row per item.
     columns:
@@ -38,7 +52,7 @@ models:
           - unique
 
   - name: stg_products
-    description: Product (food and drink items that can be ordered) data with basic cleaning and transformation applied, one row per product.
+    description: "Product (food and drink items that can be ordered) data with basic cleaning and transformation applied, one row per product. Product dimension table. The grain of the table is one row per product. \n"
     columns:
       - name: product_id
         description: The unique key for each product.
@@ -46,6 +60,29 @@ models:
           - not_null
           - unique
 
+        entity:
+          type: primary
+          name: product
+      - name: product_name
+        dimension:
+          type: categorical
+      - name: product_type
+        dimension:
+          type: categorical
+      - name: product_description
+        dimension:
+          type: categorical
+      - name: is_food_item
+        dimension:
+          type: categorical
+      - name: is_drink_item
+        dimension:
+          type: categorical
+      - name: product_price
+        dimension:
+          type: categorical
+    semantic_model:
+      enabled: true
   - name: stg_supplies
     description: >
       List of our supply expenses data with basic cleaning and transformation applied.

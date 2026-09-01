@@ -1,12 +1,14 @@
 models:
   - name: orders
-    description: Order overview data mart, offering key details for each order inlcluding if it's a customer's first order and a food vs. drink item breakdown. One row per order.
+    description: "Order overview data mart, offering key details for each order inlcluding if it's a customer's first order and a food vs. drink item breakdown. One row per order. Order fact table. This table is at the order grain with one row per order. \n"
     columns:
       - name: order_id
         description: The unique key of the orders mart.
         tests:
           - not_null
           - unique
+        entity:
+          type: primary
       - name: customer_id
         description: The foreign key relating to the customer who placed the order.
         tests:
@@ -14,12 +16,24 @@ models:
               arguments:
                 to: ref('stg_customers')
                 field: customer_id
+        entity:
+          type: foreign
+          name: customer
       - name: location_id
         description: The foreign key relating to the location the order was placed at.
+        entity:
+          type: foreign
+          name: location
       - name: order_total
         description: The total amount of the order in USD including tax.
+        dimension:
+          type: categorical
+          name: order_total_dim
       - name: ordered_at
         description: The timestamp the order was placed at.
+        dimension:
+          type: time
+        granularity: day
       - name: count_food_items
         description: The number of individual food items ordered.
       - name: count_drink_items
@@ -40,71 +54,81 @@ models:
         description: A boolean indicating if this order is from a new customer placing their first order.
       - name: is_food_order
         description: A boolean indicating if this order included any food items.
+        dimension:
+          type: categorical
       - name: is_drink_order
         description: A boolean indicating if this order included any drink items.
-semantic_models:
-  #The name of the semantic model.
-  - name: orders
-    defaults:
-      agg_time_dimension: ordered_at
-    description: |
-      Order fact table. This table is at the order grain with one row per order. 
-    #The name of the dbt model and schema
-    model: ref('orders')
-    #Entities. These usually corespond to keys in the table.
-    entities:
-      - name: order_id
-        type: primary
-      - name: location
-        type: foreign
-        expr: location_id
-      - name: customer
-        type: foreign
-        expr: customer_id
-    #Measures. These are the aggregations on the columns in the table.
-    measures: 
-      - name: order_total
-        description: The total revenue for each order.
-        agg: sum
-      - name: order_count
-        expr: 1
-        agg: sum
-      - name: tax_paid
-        description: The toal tax paid on each order. 
-        agg: sum
+        dimension:
+          type: categorical
+    semantic_model:
+      enabled: true
+    agg_time_dimension: ordered_at
+    derived_semantics:
+      entities: []
+      dimensions:
+        - name: ordered_at_date
+          type: time
+          granularity: day
+          expr: date_trunc('day', ordered_at)::DATE
+    metrics:
       - name: customers_with_orders
-        description: Distinct count of customers placing orders
+        description: "Distict count of customers placing orders"
+        type: simple
+        label: Customers w/ Orders
         agg: count_distinct
         expr: customer_id
-      - name: locations_with_orders
-        description: Distinct count of locations with order
-        expr: location_id
+      - name: new_customer
+        description: Unique count of new customers.
+        label: New Customers
+        type: simple
+        filter: |
+          {{ Dimension('customer__customer_type') }}  = 'new'
+
         agg: count_distinct
+        expr: customer_id
       - name: order_cost
-        description: The cost for each order item. Cost is calculated as a sum of the supply cost for each order item. 
+        description: Sum of cost for each order item.
+        label: Order Cost
+        type: simple
         agg: sum
-    #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.  
-    dimensions:
-      - name: ordered_at
-        type: time
-        type_params:
-          time_granularity: day
-      - name: ordered_at_date
-        type: time
-        expr: date_trunc('day', ordered_at)::DATE
-        type_params:
-          time_granularity: day
-      - name: order_total_dim
-        type: categorical
-        expr: order_total
-      - name: is_food_order
-        type: categorical
-      - name: is_drink_order
-        type: categorical  
-metrics:
-  - name: order_total
-    description: Sum of total order amonunt. Includes tax + revenue.
-    type: simple
-    label: Order Total
-    type_params:
-      measure: order_total
+      - name: large_order
+        description: "Count of orders with order total over 20."
+        type: simple
+        label: "Large Orders"
+        filter: |
+          {{ Dimension('order_id__order_total_dim') }} >= 20
+        agg: sum
+        expr: 1
+      - name: orders
+        description: Count of orders.
+        label: Orders
+        type: simple
+        agg: sum
+        expr: 1
+      - name: food_orders
+        description: Count of orders that contain food order items
+        label: Food Orders
+        type: simple
+        filter: |
+          {{Dimension('order_id__is_food_order')}} = true
+
+
+#Ratio Metrics
+        agg: sum
+        expr: 1
+      - name: order_total
+        description: Sum of total order amonunt. Includes tax + revenue.
+        type: simple
+        label: Order Total
+        agg: sum
+      - name: locations
+        description: Count of locations that placed in order.
+        type: simple
+        label: Locations
+        agg: count_distinct
+        expr: location_id
+      - name: tax_paid
+        description: The toal tax paid on each order.
+        agg: sum
+        type: simple
+        hidden: true
