@@ -20,7 +20,8 @@ vars:
   "dbt_date:time_zone": "America/Los_Angeles"
 
 models:
-  staging:
-    +materialized: view
-  marts:
-    +materialized: table
+  jaffle_semantic_layer_testing:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

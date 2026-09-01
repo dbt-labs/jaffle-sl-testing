@@ -93,3 +93,12 @@ models:
         label: Cumulative Revenue (All Time)
         type: cumulative
         input_metric: revenue_1
+
+  - name: metricflow_time_spine
+    description: Daily time spine used for Semantic Layer time-based joins and metrics.
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        description: Calendar date at daily grain.
+        granularity: day
