@@ -1,0 +1,40 @@
+version: 1
+
+evals:
+  - name: repeat_purchase_rate_uses_governed_metric
+    prompt: What is our repeat purchase rate? Is there a metric for it?
+    expectations:
+      - Discover and query the `repeat_purchase_rate` metric rather than recomputing a ratio from customer-type rows.
+      - Explain that the governed definition is returning customers divided by customers with at least one order.
+      - State that `returning` means more than one lifetime order; without a time filter the rate is all-time, while an order-time filter changes the active cohort but not the lifetime classification.
+      - Do not count customers with no orders as new customers or include them in the denominator.
+
+  - name: customer_lifetime_value_and_churn_are_not_conflated
+    prompt: Which customers churned last quarter and what was their lifetime value?
+    expectations:
+      - Discover `customer_lifetime_value` and use `customer__last_ordered_at` to support customer-level last-activity analysis.
+      - State that the project still has no governed churn definition, metric, or inactivity threshold; do not present "last order occurred in the quarter" as established churn logic.
+      - Clarify whether "last quarter" is calendar-relative or relative to the maximum data date before substituting a data-relative quarter.
+      - Define lifetime value as each customer's sum of order totals including tax, with each order counted once.
+
+  - name: revenue_breakdown_reports_missing_business_dimensions
+    prompt: Show revenue by sales channel and region. If no metric exists, say what is missing.
+    expectations:
+      - Discover the governed `revenue` metric and explain that it excludes tax.
+      - Report that neither sales channel nor region exists in the source models or Semantic Layer.
+      - Do not relabel `location_name` as region and do not infer sales channel from store identifiers.
+      - Do not fabricate a breakdown when the requested dimensions are unavailable.
+
+  - name: model_documentation_inventory_uses_current_columns
+    prompt: Which models have no descriptions for their columns? Which are most used?
+    expectations:
+      - Find that every modeled column now has a description.
+      - Do not report removed or nonexistent `orders` columns such as `location_name`, `is_first_order`, or item-count and subtotal fields.
+      - Explain the usage proxy used, such as direct downstream dbt dependencies, rather than implying warehouse query frequency.
+
+  - name: nonexistent_order_status_is_not_invented
+    prompt: What does the status column in the orders model mean? List its possible values.
+    expectations:
+      - State that `orders`, `stg_orders`, and the raw order seed do not contain a status column.
+      - Do not invent status values or confuse `customer_type` with order status.
+      - Mention that the modeled order fields include order value, tax, timestamps, food/drink flags, and order cost.

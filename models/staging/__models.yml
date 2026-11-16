@@ -9,24 +9,36 @@ models:
         tests:
           - not_null
           - unique
+      - name: customer_name
+        description: The customer's full name.
 
   - name: stg_locations
-    description: List of open locations with basic cleaning and transformation applied, one row per location.
+    description: List of store locations with basic cleaning and transformation applied, one row per location.
     columns:
       - name: location_id
-        description: The unique key for each location.
+        description: The unique key for each store location.
         tests:
           - not_null
           - unique
+      - name: location_name
+        description: The city name used to identify the store location; this is not a governed region.
+      - name: tax_rate
+        description: The sales tax rate applied at the store location, expressed as a decimal.
+      - name: opened_at
+        description: The timestamp when the store location opened.
 
   - name: stg_order_items
-    description: Individual food and drink items that make up our orders, one row per item.
+    description: Individual food and drink items that make up orders, one row per order item.
     columns:
       - name: order_item_id
         description: The unique key for each order item.
         tests:
           - not_null
           - unique
+      - name: order_id
+        description: The foreign key for the order containing the item.
+      - name: product_id
+        description: The foreign key for the ordered product.
 
   - name: stg_orders
     description: Order data with basic cleaning and transformation applied, one row per order.
@@ -36,24 +48,53 @@ models:
         tests:
           - not_null
           - unique
+      - name: location_id
+        description: The foreign key for the store where the order was placed.
+      - name: customer_id
+        description: The foreign key for the customer who placed the order.
+      - name: order_total
+        description: The order total in USD, including tax.
+      - name: tax_paid
+        description: The tax paid for the order in USD.
+      - name: ordered_at
+        description: The timestamp when the order was placed.
 
   - name: stg_products
-    description: Product (food and drink items that can be ordered) data with basic cleaning and transformation applied, one row per product.
+    description: Product data with basic cleaning and transformation applied, one row per food or drink product.
     columns:
       - name: product_id
         description: The unique key for each product.
         tests:
           - not_null
           - unique
+      - name: product_name
+        description: The product's display name.
+      - name: product_type
+        description: The product category from the source, such as `jaffle` or `beverage`.
+      - name: product_description
+        description: The customer-facing description of the product.
+      - name: product_price
+        description: The product's unit price in USD, excluding tax.
+      - name: is_food_item
+        description: Integer flag equal to 1 when the product type is `jaffle`, otherwise 0.
+      - name: is_drink_item
+        description: Integer flag equal to 1 when the product type is `beverage`, otherwise 0.
 
   - name: stg_supplies
-    description: >
-      List of our supply expenses data with basic cleaning and transformation applied.
-
-      One row per supply cost, not per supply. As supply costs fluctuate they receive a new row with a new UUID. Thus there can be multiple rows per supply_id.
+    description: Supply expense data with one row per product-supply-cost record. A supply can have multiple rows when it is used by multiple products or has multiple source cost records.
     columns:
       - name: supply_uuid
-        description: The unique key of our supplies per cost.
+        description: Surrogate key generated from the source supply ID and product ID.
         tests:
           - not_null
           - unique
+      - name: supply_id
+        description: The source identifier for the supply.
+      - name: product_id
+        description: The foreign key for the product that uses the supply.
+      - name: supply_name
+        description: The name of the supply.
+      - name: supply_cost
+        description: The supply cost in USD.
+      - name: is_perishable_supply
+        description: Boolean indicating whether the supply is perishable.

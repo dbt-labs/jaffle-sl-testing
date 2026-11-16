@@ -1,3 +1,25 @@
+models:
+  - name: order_items
+    description: Order-item fact table with one row per item in an order.
+    columns:
+      - name: order_item_id
+        description: The unique key for the order item.
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        description: The foreign key for the order containing the item.
+      - name: product_id
+        description: The foreign key for the ordered product.
+      - name: ordered_at
+        description: The timestamp when the associated order was placed.
+      - name: subtotal
+        description: The product price in USD, excluding tax, at the grain of the order item.
+      - name: is_food_item
+        description: Integer flag equal to 1 when the ordered product is food, otherwise 0.
+      - name: is_drink_item
+        description: Integer flag equal to 1 when the ordered product is a drink, otherwise 0.
+
 semantic_models:
   #The name of the semantic model.
   - name: order_items

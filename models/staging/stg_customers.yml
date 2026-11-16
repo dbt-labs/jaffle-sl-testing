@@ -1,14 +1,10 @@
 ---
 semantic_models:
-  #The name of the semantic model.
   - name: stg_customers
     defaults:
       agg_time_dimension: first_ordered_at
-    description: |
-      Customer dimension table. The grain of the table is one row per customer.
-    #The name of the dbt model
+    description: Customer dimension table. The grain is one row per customer, including customers who have not ordered.
     model: ref('customers')
-    #Entities. These usually corespond to keys in the table.
     entities:
       - name: customer
         type: primary
@@ -16,24 +12,34 @@ semantic_models:
         config:
           meta:
             contains_pii: false
-    #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.
+    measures:
+      - name: customer_lifetime_value
+        description: Customer lifetime spend including tax. This is additive across customers, but not across time.
+        expr: lifetime_spend
+        agg: sum
     dimensions:
       - name: customer_name
+        description: The customer's full name.
         type: categorical
         config:
           meta:
             contains_pii: true
       - name: count_lifetime_orders
+        description: The customer's all-time number of orders.
         type: categorical
       - name: lifetime_spend
+        description: The customer's all-time spend including tax.
         type: categorical
       - name: customer_type
+        description: Purchase-frequency segment (`no orders`, `new`, or `returning`).
         type: categorical
       - name: first_ordered_at
+        description: Timestamp of the customer's first order.
         type: time
         type_params:
           time_granularity: day
       - name: last_ordered_at
+        description: Timestamp of the customer's most recent order. Use this dimension for explicitly defined, last-activity cohort analysis; it is not itself a churn definition.
         type: time
         type_params:
           time_granularity: day

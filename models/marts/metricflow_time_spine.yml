@@ -1,0 +1,9 @@
+models:
+  - name: metricflow_time_spine
+    description: Daily time spine used by MetricFlow for time-series and offset calculations.
+    columns:
+      - name: date_day
+        description: A calendar date in the MetricFlow time spine.
+        tests:
+          - not_null
+          - unique
