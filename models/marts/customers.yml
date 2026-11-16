@@ -5,42 +5,62 @@ models:
     description: Customer overview data mart, offering key details for each unique customer. One row per customer.
     columns:
       - name: customer_id
-        description: The unique key of the orders mart.
+        description: The unique key of the customers mart.
         tests:
           - not_null
           - unique
       - name: customer_name
-        description: Customers' full name.
+        description: Customer's full name.
       - name: count_lifetime_orders
-        description: Total number of orders a customer has ever placed.
+        description: Total number of orders a customer has placed across the full available history.
       - name: first_ordered_at
         description: The timestamp when a customer placed their first order.
       - name: last_ordered_at
-        description: The timestamp of a customer's most recent order.
+        description: The timestamp when a customer placed their most recent order.
       - name: lifetime_spend_pretax
-        description: The sum of all the pre-tax subtotals of every order a customer has placed.
+        description: The sum of item subtotals, excluding tax, across all orders placed by the customer.
       - name: lifetime_spend
-        description: The sum of all the order totals (including tax) that a customer has ever placed.
+        description: The sum of order totals, including tax, across all orders placed by the customer. Each order total is counted once.
+      - name: is_repeat_buyer
+        description: True when the customer has placed more than one order across the full available history.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
       - name: customer_type
-        description: Options are 'new' or 'returning', indicating if a customer has ordered more than once or has only placed their first order to date.
+        description: "Customer purchase-frequency classification: 'returning' for more than one lifetime order and 'new' otherwise."
         tests:
           - accepted_values:
               arguments:
                 values: ["new", "returning"]
 metrics:
-# Simple metrics
   - name: customers_with_orders
-    description: "Distict count of customers placing orders"
+    description: Distinct count of customers who placed at least one order.
     type: simple
-    label: Customers w/ Orders
+    label: Customers with Orders
     type_params:
       measure: customers_with_orders
   - name: new_customer
-    description: Unique count of new customers.
+    description: Distinct count of customers who have placed exactly one order across the full available history.
     label: New Customers
     type: simple
     type_params:
       measure: customers_with_orders
     filter: |
-        {{ Dimension('customer__customer_type') }}  = 'new'
-
+      {{ Dimension('customer__customer_type') }} = 'new'
+  - name: repeat_customers
+    description: Distinct count of customers who have placed more than one order across the full available history.
+    label: Repeat Customers
+    type: simple
+    type_params:
+      measure: customers_with_orders
+    filter: |
+      {{ Dimension('customer__is_repeat_buyer') }} = true
+  - name: repeat_purchase_rate
+    description: Percentage of customers with orders who placed more than one order across the full available history.
+    label: Repeat Purchase Rate
+    type: ratio
+    type_params:
+      numerator: repeat_customers
+      denominator: customers_with_orders

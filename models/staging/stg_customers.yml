@@ -27,6 +27,8 @@ semantic_models:
         type: categorical
       - name: lifetime_spend
         type: categorical
+      - name: is_repeat_buyer
+        type: categorical
       - name: customer_type
         type: categorical
       - name: first_ordered_at
