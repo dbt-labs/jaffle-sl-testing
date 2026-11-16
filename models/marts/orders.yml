@@ -1,47 +1,34 @@
+version: 2
+
 models:
   - name: orders
-    description: Order overview data mart, offering key details for each order inlcluding if it's a customer's first order and a food vs. drink item breakdown. One row per order.
+    description: Order fact mart with one row per order and fulfillment cost and item-type flags.
     columns:
       - name: order_id
-        description: The unique key of the orders mart.
-        tests:
-          - not_null
-          - unique
+        description: Unique order identifier.
+        tests: [not_null, unique]
       - name: customer_id
-        description: The foreign key relating to the customer who placed the order.
+        description: Identifier of the customer who placed the order.
         tests:
           - relationships:
               arguments:
                 to: ref('stg_customers')
                 field: customer_id
       - name: location_id
-        description: The foreign key relating to the location the order was placed at.
+        description: Identifier of the store location associated with the order.
       - name: order_total
-        description: The total amount of the order in USD including tax.
+        description: Total charged for the order including tax, in USD.
+      - name: tax_paid
+        description: Tax charged for the order, in USD.
       - name: ordered_at
-        description: The timestamp the order was placed at.
-      - name: count_food_items
-        description: The number of individual food items ordered.
-      - name: count_drink_items
-        description: The number of individual drink items ordered.
-      - name: count_items
-        description: The total number of both food and drink items ordered.
-      - name: subtotal_food_items
-        description: The sum of all the food item prices without tax.
-      - name: subtotal_drink_items
-        description: The sum of all the drink item prices without tax.
-      - name: subtotal
-        description: The sum total of both food and drink item prices without tax.
-      - name: order_cost
-        description: The sum of supply expenses to fulfill the order.
-      - name: location_name
-        description: The full location name of where this order was placed. Denormalized from `stg_locations`.
-      - name: is_first_order
-        description: A boolean indicating if this order is from a new customer placing their first order.
+        description: Timestamp when the order was placed.
       - name: is_food_order
-        description: A boolean indicating if this order included any food items.
+        description: True when the order contains at least one food item.
       - name: is_drink_order
-        description: A boolean indicating if this order included any drink items.
+        description: True when the order contains at least one drink item.
+      - name: order_cost
+        description: Sum of supply costs associated with fulfilling the order, in USD.
+
 semantic_models:
   #The name of the semantic model.
   - name: orders

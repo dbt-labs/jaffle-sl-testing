@@ -1,0 +1,75 @@
+version: 1
+
+# Regression cases distilled from the five most recent project conversations.
+# Each case records the governed modeling facts a future answer must use.
+evals:
+  - name: documented_columns_and_usage
+    prompt: Which models have no descriptions for their columns? Which are most used?
+    assertions:
+      - All columns in staging models, orders, order_items, customers, and metricflow_time_spine have descriptions.
+      - Usage is described as a dbt-lineage proxy, not warehouse query frequency.
+      - The answer does not report stale columns that are absent from the model SQL.
+
+  - name: revenue_by_channel_and_region
+    prompt: Show revenue by sales channel and region. If no metric exists, say what is missing.
+    assertions:
+      - The revenue metric is available and excludes tax.
+      - Region is available through the order location entity and uses the governed US region mapping.
+      - Sales channel is still reported as unavailable because the source orders contain no channel attribute.
+      - The answer does not invent a sales channel or equate location name with region.
+
+  - name: governed_repeat_purchase_rate
+    prompt: What is our repeat purchase rate? Is there a metric for it?
+    assertions:
+      - The repeat_purchase_rate metric is used.
+      - A repeat customer has more than one distinct order.
+      - Customers with no orders are excluded from the denominator.
+      - The answer reports both repeat customers and customers with orders when explaining the rate.
+
+  - name: governed_churn_and_lifetime_value
+    prompt: Which customers churned last quarter and what was their lifetime value?
+    assertions:
+      - Churn means reaching 90 consecutive days without an order.
+      - Churn is evaluated relative to data_as_of_at, the latest loaded order timestamp.
+      - The churned_at time dimension is used to determine the quarter.
+      - customer_lifetime_value includes tax and is summed once per order without order-item fanout.
+      - If wall-clock last quarter is beyond the data watermark, the answer clearly distinguishes it from the latest data-relative quarter.
+
+  - name: unsupported_order_status
+    prompt: What does the status column in the orders model mean? List its possible values.
+    assertions:
+      - The answer states that orders has no status column.
+      - The answer does not confuse customer_status with order status.
+      - The documented orders columns match the columns selected by models/marts/orders.sql.
+
+model_checks:
+  - name: customer_lifetime_value_has_no_item_fanout
+    description: For each customer, lifetime_spend equals the sum of order_total from orders.
+    sql: |
+      with expected as (
+        select customer_id, sum(order_total) as lifetime_spend
+        from {{ ref('orders') }}
+        group by 1
+      )
+      select c.customer_id
+      from {{ ref('customers') }} c
+      left join expected e using (customer_id)
+      where coalesce(abs(c.lifetime_spend - e.lifetime_spend), 0) > 0.001
+
+  - name: customer_segments_match_order_counts
+    description: Customer type and repeat flag agree with distinct lifetime order count.
+    sql: |
+      select customer_id
+      from {{ ref('customers') }}
+      where (count_lifetime_orders is null and (customer_type != 'no_orders' or is_repeat_buyer))
+         or (count_lifetime_orders = 1 and (customer_type != 'new' or is_repeat_buyer))
+         or (count_lifetime_orders > 1 and (customer_type != 'returning' or not is_repeat_buyer))
+
+  - name: customer_churn_status_uses_watermark
+    description: Lifecycle status agrees with churned_at relative to data_as_of_at.
+    sql: |
+      select customer_id
+      from {{ ref('customers') }}
+      where (last_ordered_at is null and customer_status != 'never_ordered')
+         or (last_ordered_at is not null and churned_at <= data_as_of_at and customer_status != 'churned')
+         or (last_ordered_at is not null and churned_at > data_as_of_at and customer_status != 'active')

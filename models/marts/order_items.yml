@@ -1,3 +1,25 @@
+version: 2
+
+models:
+  - name: order_items
+    description: Order-item fact mart with one row per product item included in an order.
+    columns:
+      - name: order_item_id
+        description: Unique order-item identifier.
+        tests: [not_null, unique]
+      - name: order_id
+        description: Identifier of the order containing the item.
+      - name: product_id
+        description: Identifier of the product ordered.
+      - name: ordered_at
+        description: Timestamp when the containing order was placed.
+      - name: subtotal
+        description: Unit product revenue before tax for this order item, in USD.
+      - name: is_food_item
+        description: Integer flag equal to 1 when the item is food and 0 otherwise.
+      - name: is_drink_item
+        description: Integer flag equal to 1 when the item is a drink and 0 otherwise.
+
 semantic_models:
   #The name of the semantic model.
   - name: order_items

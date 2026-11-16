@@ -1,14 +1,12 @@
 ---
 semantic_models:
-  #The name of the semantic model.
   - name: stg_customers
     defaults:
       agg_time_dimension: first_ordered_at
-    description: |
-      Customer dimension table. The grain of the table is one row per customer.
-    #The name of the dbt model
+    description: >
+      Customer dimension at one row per customer, including governed repeat
+      purchase and 90-day inactivity churn attributes.
     model: ref('customers')
-    #Entities. These usually corespond to keys in the table.
     entities:
       - name: customer
         type: primary
@@ -16,7 +14,15 @@ semantic_models:
         config:
           meta:
             contains_pii: false
-    #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.
+    measures:
+      - name: customer_count
+        description: Distinct count of customers.
+        agg: count_distinct
+        expr: customer_id
+      - name: customer_lifetime_value
+        description: Customer lifetime spend including tax, in USD.
+        agg: sum
+        expr: lifetime_spend
     dimensions:
       - name: customer_name
         type: categorical
@@ -29,11 +35,23 @@ semantic_models:
         type: categorical
       - name: customer_type
         type: categorical
+      - name: is_repeat_buyer
+        type: categorical
+      - name: customer_status
+        type: categorical
       - name: first_ordered_at
         type: time
         type_params:
           time_granularity: day
       - name: last_ordered_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: churned_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: data_as_of_at
         type: time
         type_params:
           time_granularity: day

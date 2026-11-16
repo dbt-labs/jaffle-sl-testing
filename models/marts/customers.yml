@@ -1,46 +1,103 @@
+version: 2
+
 models:
   - name: customers
     config:
       static_analysis: strict
-    description: Customer overview data mart, offering key details for each unique customer. One row per customer.
+    description: >
+      Customer overview mart with one row per customer. Lifetime values are
+      aggregated at the customer grain without order-item fanout. Churn is
+      defined as 90 consecutive days without an order and is evaluated as of
+      the latest order timestamp loaded into the project.
     columns:
       - name: customer_id
-        description: The unique key of the orders mart.
+        description: The unique key of the customer.
         tests:
           - not_null
           - unique
       - name: customer_name
-        description: Customers' full name.
+        description: The customer's full name.
       - name: count_lifetime_orders
-        description: Total number of orders a customer has ever placed.
+        description: Total number of distinct orders the customer has placed; null when the customer has never ordered.
       - name: first_ordered_at
-        description: The timestamp when a customer placed their first order.
+        description: Timestamp of the customer's first order.
       - name: last_ordered_at
-        description: The timestamp of a customer's most recent order.
+        description: Timestamp of the customer's most recent order.
       - name: lifetime_spend_pretax
-        description: The sum of all the pre-tax subtotals of every order a customer has placed.
+        description: Sum of order-item revenue before tax across all of the customer's orders, in USD.
       - name: lifetime_spend
-        description: The sum of all the order totals (including tax) that a customer has ever placed.
-      - name: customer_type
-        description: Options are 'new' or 'returning', indicating if a customer has ordered more than once or has only placed their first order to date.
+        description: Sum of order totals including tax across all of the customer's orders, in USD.
+      - name: is_repeat_buyer
+        description: True when the customer has placed more than one distinct order.
         tests:
+          - not_null
+      - name: churned_at
+        description: Timestamp 90 days after the last order, when the customer meets the governed inactivity-based churn definition.
+      - name: data_as_of_at
+        description: Latest order timestamp loaded into the project; the reference timestamp used to evaluate customer status.
+      - name: customer_type
+        description: Order-frequency segment; one of no_orders, new (one order), or returning (more than one order).
+        tests:
+          - not_null
           - accepted_values:
               arguments:
-                values: ["new", "returning"]
+                values: ["no_orders", "new", "returning"]
+      - name: customer_status
+        description: Lifecycle status as of data_as_of_at; one of never_ordered, active, or churned after 90 days of inactivity.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["never_ordered", "active", "churned"]
+
 metrics:
-# Simple metrics
   - name: customers_with_orders
-    description: "Distict count of customers placing orders"
+    description: Distinct count of customers who have placed at least one order.
     type: simple
-    label: Customers w/ Orders
+    label: Customers with Orders
     type_params:
-      measure: customers_with_orders
+      measure: customer_count
+    filter: |
+      {{ Dimension('customer__customer_type') }} != 'no_orders'
+
   - name: new_customer
-    description: Unique count of new customers.
+    description: Distinct count of customers who have placed exactly one order.
     label: New Customers
     type: simple
     type_params:
-      measure: customers_with_orders
+      measure: customer_count
     filter: |
-        {{ Dimension('customer__customer_type') }}  = 'new'
+      {{ Dimension('customer__customer_type') }} = 'new'
 
+  - name: repeat_customers
+    description: Distinct count of customers who have placed more than one order.
+    label: Repeat Customers
+    type: simple
+    type_params:
+      measure: customer_count
+    filter: |
+      {{ Dimension('customer__is_repeat_buyer') }} = true
+
+  - name: repeat_purchase_rate
+    description: Share of customers with orders who have placed more than one distinct order.
+    label: Repeat Purchase Rate
+    type: ratio
+    type_params:
+      numerator: repeat_customers
+      denominator: customers_with_orders
+
+  - name: churned_customers
+    description: Distinct count of customers who reached 90 days without an order as of the latest loaded order timestamp.
+    label: Churned Customers
+    type: simple
+    type_params:
+      measure: customer_count
+    filter: |
+      {{ Dimension('customer__customer_status') }} = 'churned'
+
+  - name: customer_lifetime_value
+    description: Total customer lifetime spend including tax, in USD. At customer grain this is the lifetime value per customer.
+    label: Customer Lifetime Value
+    type: simple
+    type_params:
+      measure: customer_lifetime_value

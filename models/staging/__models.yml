@@ -2,58 +2,96 @@ version: 2
 
 models:
   - name: stg_customers
-    description: Customer data with basic cleaning and transformation applied, one row per customer.
+    description: Customer data with basic cleaning applied, one row per customer.
     columns:
       - name: customer_id
-        description: The unique key for each customer.
-        tests:
-          - not_null
-          - unique
+        description: Unique customer identifier from the source system.
+        tests: [not_null, unique]
+      - name: customer_name
+        description: Customer's full name as supplied by the source system.
 
   - name: stg_locations
-    description: List of open locations with basic cleaning and transformation applied, one row per location.
+    description: Store location data with a governed US region mapping, one row per location.
     columns:
       - name: location_id
-        description: The unique key for each location.
+        description: Unique store location identifier.
+        tests: [not_null, unique]
+      - name: location_name
+        description: City name used to identify the store location.
+      - name: region
+        description: US Census-style region derived from location_name; Unknown for unmapped locations.
         tests:
           - not_null
-          - unique
+          - accepted_values:
+              arguments:
+                values: ["Northeast", "Midwest", "South", "West", "Unknown"]
+      - name: tax_rate
+        description: Sales tax rate applied at the location, expressed as a decimal fraction.
+      - name: opened_at
+        description: Timestamp when the store location opened.
 
   - name: stg_order_items
-    description: Individual food and drink items that make up our orders, one row per item.
+    description: Individual product items in orders, one row per item.
     columns:
       - name: order_item_id
-        description: The unique key for each order item.
-        tests:
-          - not_null
-          - unique
+        description: Unique order-item identifier.
+        tests: [not_null, unique]
+      - name: order_id
+        description: Identifier of the order containing the item.
+      - name: product_id
+        description: Identifier of the product ordered.
 
   - name: stg_orders
-    description: Order data with basic cleaning and transformation applied, one row per order.
+    description: Order data with currency values converted from cents to USD, one row per order.
     columns:
       - name: order_id
-        description: The unique key for each order.
-        tests:
-          - not_null
-          - unique
+        description: Unique order identifier.
+        tests: [not_null, unique]
+      - name: location_id
+        description: Identifier of the store location associated with the order.
+      - name: customer_id
+        description: Identifier of the customer who placed the order.
+      - name: order_total
+        description: Total charged for the order including tax, in USD.
+      - name: tax_paid
+        description: Tax charged for the order, in USD.
+      - name: ordered_at
+        description: Timestamp when the order was placed.
 
   - name: stg_products
-    description: Product (food and drink items that can be ordered) data with basic cleaning and transformation applied, one row per product.
+    description: Product catalog data with prices converted from cents to USD, one row per product.
     columns:
       - name: product_id
-        description: The unique key for each product.
-        tests:
-          - not_null
-          - unique
+        description: Unique product SKU.
+        tests: [not_null, unique]
+      - name: product_name
+        description: Customer-facing product name.
+      - name: product_type
+        description: Source product category, such as jaffle or beverage.
+      - name: product_description
+        description: Customer-facing product description.
+      - name: product_price
+        description: Unit selling price before tax, in USD.
+      - name: is_food_item
+        description: Integer flag equal to 1 for jaffle products and 0 otherwise.
+      - name: is_drink_item
+        description: Integer flag equal to 1 for beverage products and 0 otherwise.
 
   - name: stg_supplies
     description: >
-      List of our supply expenses data with basic cleaning and transformation applied.
-
-      One row per supply cost, not per supply. As supply costs fluctuate they receive a new row with a new UUID. Thus there can be multiple rows per supply_id.
+      Supply expenses with one row per product-supply cost record. A supply can
+      have multiple records when its cost changes.
     columns:
       - name: supply_uuid
-        description: The unique key of our supplies per cost.
-        tests:
-          - not_null
-          - unique
+        description: Surrogate key for the supply and product combination.
+        tests: [not_null, unique]
+      - name: supply_id
+        description: Source identifier for the supply.
+      - name: product_id
+        description: Identifier of the product that uses the supply.
+      - name: supply_name
+        description: Name of the ingredient or packaging supply.
+      - name: supply_cost
+        description: Cost of the supply in USD.
+      - name: is_perishable_supply
+        description: Boolean indicating whether the supply is perishable.

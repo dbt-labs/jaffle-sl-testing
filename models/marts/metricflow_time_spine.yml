@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: metricflow_time_spine
+    description: Daily time spine used by MetricFlow for time-series metric queries.
+    columns:
+      - name: date_day
+        description: Calendar date at daily grain.
+        tests: [not_null, unique]
