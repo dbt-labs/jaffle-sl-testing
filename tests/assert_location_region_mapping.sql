@@ -17,4 +17,6 @@ select
     expected.region as expected_region
 from {{ ref('stg_locations') }} as locations
 left join expected using (location_name)
-where locations.region is distinct from expected.region
+where
+    expected.region is null
+    or locations.region is distinct from expected.region
