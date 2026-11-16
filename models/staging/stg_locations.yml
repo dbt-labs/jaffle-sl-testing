@@ -14,6 +14,9 @@ semantic_models:
     dimensions:
       - name: location_name
         type: categorical
+      - name: region
+        description: US Census region for the store location.
+        type: categorical
       - name: tax_rate
         type: categorical
       - name: opened_at

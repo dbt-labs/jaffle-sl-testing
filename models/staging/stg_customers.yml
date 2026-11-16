@@ -27,13 +27,27 @@ semantic_models:
         type: categorical
       - name: lifetime_spend
         type: categorical
+      - name: is_repeat_buyer
+        type: categorical
       - name: customer_type
+        type: categorical
+      - name: is_churned
         type: categorical
       - name: first_ordered_at
         type: time
         type_params:
           time_granularity: day
       - name: last_ordered_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: churned_at
+        description: Timestamp when the customer reaches 90 days of inactivity.
+        type: time
+        type_params:
+          time_granularity: day
+      - name: data_as_of_at
+        description: Latest order timestamp used to evaluate churn.
         type: time
         type_params:
           time_granularity: day

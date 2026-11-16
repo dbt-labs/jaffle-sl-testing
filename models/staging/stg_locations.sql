@@ -20,6 +20,12 @@ renamed as (
 
         ---------- properties
         name as location_name,
+        case
+            when name in ('Brooklyn', 'Philadelphia') then 'Northeast'
+            when name = 'Chicago' then 'Midwest'
+            when name = 'New Orleans' then 'South'
+            when name = 'San Francisco' then 'West'
+        end as region,
         tax_rate,
 
         ---------- timestamp

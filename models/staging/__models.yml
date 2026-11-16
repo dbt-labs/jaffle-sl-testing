@@ -9,51 +9,101 @@ models:
         tests:
           - not_null
           - unique
+      - name: customer_name
+        description: The customer's full name as provided in the source.
 
   - name: stg_locations
-    description: List of open locations with basic cleaning and transformation applied, one row per location.
+    description: Store locations with a governed US Census region mapping, one row per location.
     columns:
       - name: location_id
-        description: The unique key for each location.
+        description: The unique key for each store location.
         tests:
           - not_null
           - unique
+      - name: location_name
+        description: The store location's city name.
+      - name: region
+        description: US Census region derived from location_name; one of Midwest, Northeast, South, or West.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Midwest", "Northeast", "South", "West"]
+      - name: tax_rate
+        description: The sales-tax rate applicable at the location.
+      - name: opened_at
+        description: The timestamp when the location opened.
 
   - name: stg_order_items
-    description: Individual food and drink items that make up our orders, one row per item.
+    description: Individual food and drink items that make up orders, one row per item.
     columns:
       - name: order_item_id
         description: The unique key for each order item.
         tests:
           - not_null
           - unique
+      - name: order_id
+        description: The foreign key to the order containing this item.
+      - name: product_id
+        description: The foreign key to the product purchased.
 
   - name: stg_orders
-    description: Order data with basic cleaning and transformation applied, one row per order.
+    description: >
+      Order data with basic cleaning and currency conversion applied, one row per order.
+      The source does not provide order status or sales channel.
     columns:
       - name: order_id
         description: The unique key for each order.
         tests:
           - not_null
           - unique
+      - name: location_id
+        description: The foreign key to the store location where the order was placed.
+      - name: customer_id
+        description: The foreign key to the customer who placed the order.
+      - name: order_total
+        description: The order total, including tax, converted from source cents to USD.
+      - name: tax_paid
+        description: The tax paid on the order, converted from source cents to USD.
+      - name: ordered_at
+        description: The timestamp when the order was placed.
 
   - name: stg_products
-    description: Product (food and drink items that can be ordered) data with basic cleaning and transformation applied, one row per product.
+    description: Product data with basic cleaning and transformation applied, one row per product.
     columns:
       - name: product_id
         description: The unique key for each product.
         tests:
           - not_null
           - unique
+      - name: product_name
+        description: The product's display name.
+      - name: product_type
+        description: The source product category, such as jaffle or beverage.
+      - name: product_description
+        description: The product description shown to customers.
+      - name: product_price
+        description: The product's unit price, converted from source cents to USD.
+      - name: is_food_item
+        description: Integer flag equal to 1 when the product type is jaffle and 0 otherwise.
+      - name: is_drink_item
+        description: Integer flag equal to 1 when the product type is beverage and 0 otherwise.
 
   - name: stg_supplies
-    description: >
-      List of our supply expenses data with basic cleaning and transformation applied.
-
-      One row per supply cost, not per supply. As supply costs fluctuate they receive a new row with a new UUID. Thus there can be multiple rows per supply_id.
+    description: Supply expense data with basic cleaning and transformation applied; one row per source supply-cost record.
     columns:
       - name: supply_uuid
-        description: The unique key of our supplies per cost.
+        description: Surrogate key identifying a supply and product cost record.
         tests:
           - not_null
           - unique
+      - name: supply_id
+        description: The source identifier for the supply.
+      - name: product_id
+        description: The foreign key to the product that uses the supply.
+      - name: supply_name
+        description: The supply's display name.
+      - name: supply_cost
+        description: The supply cost, converted from source cents to USD.
+      - name: is_perishable_supply
+        description: Boolean indicating whether the supply is perishable.

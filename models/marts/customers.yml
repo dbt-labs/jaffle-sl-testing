@@ -2,45 +2,89 @@ models:
   - name: customers
     config:
       static_analysis: strict
-    description: Customer overview data mart, offering key details for each unique customer. One row per customer.
+    description: >
+      Customer overview mart with lifetime value, repeat-purchase classification, and
+      90-day inactivity churn classification. One row per customer.
     columns:
       - name: customer_id
-        description: The unique key of the orders mart.
+        description: The unique key of the customers mart.
         tests:
           - not_null
           - unique
       - name: customer_name
-        description: Customers' full name.
+        description: The customer's full name.
       - name: count_lifetime_orders
-        description: Total number of orders a customer has ever placed.
+        description: Total number of orders the customer placed across the available history.
       - name: first_ordered_at
-        description: The timestamp when a customer placed their first order.
+        description: The timestamp when the customer placed their first order.
       - name: last_ordered_at
-        description: The timestamp of a customer's most recent order.
+        description: The timestamp when the customer placed their most recent order.
       - name: lifetime_spend_pretax
-        description: The sum of all the pre-tax subtotals of every order a customer has placed.
+        description: Sum of item subtotals, excluding tax, across all customer orders.
       - name: lifetime_spend
-        description: The sum of all the order totals (including tax) that a customer has ever placed.
+        description: Sum of order totals, including tax, with each customer order counted exactly once.
+      - name: is_repeat_buyer
+        description: True when the customer placed more than one order across the available history.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+      - name: churned_at
+        description: Timestamp when the customer reaches 90 days without an order; null for customers with no orders.
+      - name: is_churned
+        description: True when churned_at is on or before data_as_of_at.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+      - name: data_as_of_at
+        description: Latest order timestamp in the dataset, used instead of wall-clock time to evaluate churn.
       - name: customer_type
-        description: Options are 'new' or 'returning', indicating if a customer has ordered more than once or has only placed their first order to date.
+        description: "Purchase-frequency class: returning for 2+ orders, new for 1 order, or prospect for no orders."
         tests:
           - accepted_values:
               arguments:
-                values: ["new", "returning"]
+                values: ["new", "returning", "prospect"]
+
 metrics:
-# Simple metrics
   - name: customers_with_orders
-    description: "Distict count of customers placing orders"
+    description: Distinct count of customers who placed at least one order.
     type: simple
-    label: Customers w/ Orders
+    label: Customers with Orders
     type_params:
       measure: customers_with_orders
   - name: new_customer
-    description: Unique count of new customers.
+    description: Distinct count of customers who placed exactly one order across the available history.
     label: New Customers
     type: simple
     type_params:
       measure: customers_with_orders
     filter: |
-        {{ Dimension('customer__customer_type') }}  = 'new'
-
+      {{ Dimension('customer__customer_type') }} = 'new'
+  - name: repeat_customers
+    description: Distinct count of customers who placed more than one order across the available history.
+    label: Repeat Customers
+    type: simple
+    type_params:
+      measure: customers_with_orders
+    filter: |
+      {{ Dimension('customer__is_repeat_buyer') }} = true
+  - name: repeat_purchase_rate
+    description: Percentage of customers with orders who placed more than one order across the available history.
+    label: Repeat Purchase Rate
+    type: ratio
+    type_params:
+      numerator: repeat_customers
+      denominator: customers_with_orders
+  - name: churned_customers
+    description: >
+      Distinct count of customers who reached 90 consecutive days without an order,
+      evaluated as of the latest order timestamp in the dataset.
+    label: Churned Customers
+    type: simple
+    type_params:
+      measure: customers_with_orders
+    filter: |
+      {{ Dimension('customer__is_churned') }} = true
