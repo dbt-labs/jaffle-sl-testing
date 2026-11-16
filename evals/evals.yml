@@ -1,0 +1,54 @@
+evals:
+  - name: recent_conversation_modeling
+    cases:
+      - name: repeat_purchase_rate_is_governed
+        question: What is our repeat purchase rate? Is there a metric for it?
+        columns:
+          - name: repeat_purchase_rate
+            assertions:
+              - type: data_test
+                test_name: not_null
+
+      - name: revenue_by_region
+        question: Show revenue by region. If a requested dimension is unavailable, say what is missing.
+        columns:
+          - name: region
+            assertions:
+              - type: data_test
+                test_name: accepted_values
+                arguments:
+                  values: [Midwest, Northeast, South, West]
+          - name: revenue
+            assertions:
+              - type: data_test
+                test_name: not_null
+
+      - name: churned_customer_lifetime_value
+        question: Using the governed churn definition and the latest period supported by the data, which customers churned and what was their lifetime value?
+        columns:
+          - name: customer_name
+            assertions:
+              - type: data_test
+                test_name: not_null
+          - name: churned_at
+            assertions:
+              - type: data_test
+                test_name: not_null
+          - name: lifetime_spend
+            assertions:
+              - type: data_test
+                test_name: not_null
+
+      - name: customer_purchase_classification
+        question: Show the number of customers by purchase-frequency classification.
+        columns:
+          - name: customer_type
+            assertions:
+              - type: data_test
+                test_name: accepted_values
+                arguments:
+                  values: [new, returning, prospect]
+          - name: customers
+            assertions:
+              - type: data_test
+                test_name: not_null
